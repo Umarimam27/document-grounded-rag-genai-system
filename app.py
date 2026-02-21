@@ -1,23 +1,18 @@
 import streamlit as st
 from groq import Groq
 import os
-from dotenv import load_dotenv
-from pathlib import Path
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
 from pypdf import PdfReader
 
 # ==============================
-# 🔐 Load API Key
+# 🔐 Load API Key (Streamlit Cloud Compatible)
 # ==============================
-env_path = Path(__file__).parent / ".env"
-load_dotenv(dotenv_path=env_path)
-
-api_key = os.getenv("GROQ_API_KEY")
+api_key = os.environ.get("GROQ_API_KEY")
 
 if not api_key:
-    st.error("❌ GROQ_API_KEY not found in .env file.")
+    st.error("❌ GROQ_API_KEY not found in Streamlit Secrets.")
     st.stop()
 
 client = Groq(api_key=api_key)
@@ -91,7 +86,6 @@ def build_faiss_index(files):
             if text:
                 text = text.replace("\n", " ")
 
-                # Simple sentence chunking
                 sentences = text.split(". ")
                 current_chunk = ""
 
@@ -109,7 +103,6 @@ def build_faiss_index(files):
 
     embeddings = embedder.encode(chunks, convert_to_numpy=True)
 
-    # Normalize for cosine similarity
     faiss.normalize_L2(embeddings)
 
     dimension = embeddings.shape[1]
@@ -218,7 +211,6 @@ Answer:
                         full_response += token
                         placeholder.markdown(full_response)
 
-                # Add citations
                 unique_sources = set(cited_sources)
 
                 citation_text = "\n\n---\n### 📚 Sources:\n"
@@ -239,4 +231,3 @@ else:
 # Footer
 # ==============================
 st.markdown("---")
-st.markdown("Built with FAISS + SentenceTransformers + Groq LLM")
